@@ -32,32 +32,44 @@
 </head>
 <body class="m-0 p-0">
 
-  <!-- Navbar -->
-  <nav class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-lg z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-evenly items-center">
-      <h1 class="text-base sm:text-lg mr-4 font-bold whitespace-nowrap">Pole Locations Map</h1>
 
-      <div class="relative flex items-center gap-4 w-[50vw]">
-  <div class="flex-1 relative">
-    <input id="searchBox" 
-      type="text" 
-      placeholder="Search pole/site/name..."
-      class="w-full px-3 py-2 rounded text-black outline-none" />
-    <div id="searchResults" 
-      class="absolute top-10 left-0 w-full bg-white text-black rounded shadow-lg hidden search-results">
-    </div>
-  </div>
+<!-- Navbar -->
+<nav class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-lg z-50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    
+    <!-- Left Section -->
+    <h1 class="text-base hidden lg:block sm:text-lg mr-4 font-bold whitespace-nowrap">
+      Pole Locations Map
+    </h1>
+
+    <!-- Middle Section -->
+    <div class="relative flex items-center gap-4 w-[70vw] lg:w-[50vw]">
+      <div class="flex-1 relative">
+        <input id="searchBox" 
+          type="text" 
+          placeholder="Search pole/site/name..."
+          class="w-full px-3 py-2 rounded text-black outline-none" />
+        <div id="searchResults" 
+          class="absolute top-10 left-0 w-full bg-white text-black rounded shadow-lg hidden search-results">
+        </div>
+      </div>
   
-  <button onclick="resetMap()"
-    class="px-4 py-2 rounded-lg text-white text-base sm:text-lg
-           bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700
-           shadow-md shadow-indigo-600/20 transition duration-300">
-    Reset Map
-  </button>
-</div>
-
+      <button onclick="resetMap()"
+        class="px-4 py-2 rounded-lg hidden lg:block  text-white text-base lg:text-lg
+               bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700
+               shadow-md shadow-indigo-600/20 transition duration-300">
+        Reset Map
+      </button>
     </div>
-  </nav>
+
+    <!-- Right Section -->
+    <span class="ml-6 font-semibold font-arial lg:text-3xl text-base whitespace-nowrap">
+      @Manish
+    </span>
+
+  </div>
+</nav>
+
 
   <!-- Map -->
   <div id="map" class="mt-14"></div>
