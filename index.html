@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mehnova - Map</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+   #map {
+    height: calc(100vh - 56px); /* Navbar की height घटा दी */
+    width: 100%;
+    margin-top: 56px; /* Navbar की जगह खाली छोड़ दी */
+    z-index: 2;
+    }
+
+    .custom-popup {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1f2937;
+    }
+    .search-results {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body class="m-0 p-0">
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-lg z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-evenly items-center">
+      <h1 class="text-lg font-bold">Pole Locations Map</h1>
+      <div class="relative flex items-center gap-4 w-[50vw]">
+  <div class="flex-1 relative">
+    <input id="searchBox" 
+      type="text" 
+      placeholder="Search pole/site/name..."
+      class="w-full px-3 py-2 rounded text-black outline-none" />
+    <div id="searchResults" 
+      class="absolute top-10 left-0 w-full bg-white text-black rounded shadow-lg hidden search-results">
+    </div>
+  </div>
+  
+  <button onclick="resetMap()"
+    class="px-4 py-2 rounded-lg text-white text-base sm:text-lg
+           bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700
+           shadow-md shadow-indigo-600/20 transition duration-300">
+    Reset Map
+  </button>
+</div>
+
+    </div>
+  </nav>
+
+  <!-- Map -->
+  <div id="map" class="mt-14"></div>
+
+  <script>
+    let map, polesData = [], markers = [];
+    const searchBox = document.getElementById("searchBox");
+    const searchResults = document.getElementById("searchResults");
+    let debounceTimeout;
+
+    // Initialize Map with high zoom
+    map = L.map('map').setView([28.631562208651633, 77.21960333877945], 17);
+
+    // Carto Light Tile Layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OSM &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 22
+    }).addTo(map);
+
+    // Custom Red Icon
+    const redIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+      shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    // Load poles.json data
+    fetch('poles.json')
+      .then(response => response.json())
+      .then(data => {
+        polesData = data;
+        data.forEach(pole => {
+          const marker = L.marker([pole.latitude, pole.longitude], { icon: redIcon }).addTo(map);
+
+          marker.bindTooltip(
+            `<div class="bg-gray-200 px-1">#${pole.pole_no} | ${pole.site}</div>`, 
+            { permanent: true, direction: "right", offset: [1,-27] }
+          ).openTooltip();
+
+          marker.bindPopup(`
+            <div class="custom-popup">
+              <strong>Channel No:</strong> ${pole.pole_no}<br>
+              <strong>Site:</strong> ${pole.site}<br>
+              <strong>Name:</strong> ${pole.name}
+            </div>
+          `);
+
+          markers.push({ ...pole, marker });
+        });
+      });
+
+    // Search function with debounce
+    searchBox.addEventListener("input", () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        const query = searchBox.value.toLowerCase();
+        if (!query) {
+          searchResults.classList.add("hidden");
+          return;
+        }
+        const results = polesData.filter(pole =>
+          pole.pole_no.toString().includes(query) ||
+          pole.site.toLowerCase().includes(query) ||
+          pole.name.toLowerCase().includes(query)
+        );
+        displayResults(results);
+      }, 300);
+    });
+
+    function displayResults(results) {
+      if (results.length === 0) {
+        searchResults.innerHTML = `<div class="px-3 py-2 text-gray-500">No results found</div>`;
+      } else {
+        searchResults.innerHTML = results.map(r => `
+          <div class="px-3 py-2 hover:bg-gray-200 cursor-pointer" onclick="focusOnPole(${r.id})">
+            <strong>#${r.pole_no}</strong> - ${r.site} (${r.name})
+          </div>
+        `).join("");
+      }
+      searchResults.classList.remove("hidden");
+    }
+
+    // Focus map on searched pole
+    window.focusOnPole = (id) => {
+      const pole = markers.find(m => m.id === id);
+      if (pole) {
+        map.setView([pole.latitude, pole.longitude], 19);
+        pole.marker.openPopup();
+        searchResults.classList.add("hidden");
+        searchBox.value = "";
+      }
+    };
+
+    // Reset Map
+    function resetMap() {
+      map.setView([28.631562208651633, 77.21960333877945], 17, 
+    { animate: true, duration: 0.6 });
+    }
+  </script>
+</body>
+</html>
