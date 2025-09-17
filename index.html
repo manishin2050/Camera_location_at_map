@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,16 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
-   #map {
-    height: calc(100vh - 56px); /* Navbar की height घटा दी */
-    width: 100%;
-    margin-top: 56px; /* Navbar की जगह खाली छोड़ दी */
-    z-index: 2;
+    #map {
+      height: calc(100vh - 56px);
+      width: 100%;
+      margin-top: 56px;
+      z-index: 2;
     }
 
     .custom-popup {
@@ -24,51 +25,50 @@
       font-weight: 500;
       color: #1f2937;
     }
+
     .search-results {
       max-height: 200px;
       overflow-y: auto;
     }
   </style>
 </head>
+
 <body class="m-0 p-0">
 
 
-<!-- Navbar -->
-<nav class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-lg z-50">
-  <div class="max-w-7xl mx-auto px-4 py-3 flex justify-start md:justify-center items-center">
-    
-    <!-- Left Section -->
-    <h1 class="text-base hidden lg:block sm:text-lg mr-4 font-bold whitespace-nowrap">
-      Pole Locations Map
-    </h1>
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-lg z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-start md:justify-center items-center">
 
-    <!-- Middle Section -->
-    <div class="relative flex items-center gap-4 w-[70vw] lg:w-[50vw]">
-      <div class="flex-1 relative">
-        <input id="searchBox" 
-          type="text" 
-          placeholder="Search pole/site/name..."
-          class="w-full px-3 py-2 rounded text-black outline-none" />
-        <div id="searchResults" 
-          class="absolute top-10 left-0 w-full bg-white text-black rounded shadow-lg hidden search-results">
+      <!-- Left Section -->
+      <h1 class="text-base hidden lg:block sm:text-lg mr-4 font-bold whitespace-nowrap">
+        Pole Locations Map
+      </h1>
+
+      <!-- Middle Section -->
+      <div class="relative flex items-center gap-4 w-[70vw] lg:w-[50vw]">
+        <div class="flex-1 relative">
+          <input id="searchBox" type="text" placeholder="Search pole/site/name..."
+            class="w-full px-3 py-2 rounded text-black outline-none" />
+          <div id="searchResults"
+            class="absolute top-10 left-0 w-full bg-white text-black rounded shadow-lg hidden search-results">
+          </div>
         </div>
-      </div>
-  
-      <button onclick="resetMap()"
-        class="px-4 py-2 rounded-lg hidden lg:block  text-white text-base lg:text-lg
+
+        <button onclick="resetMap()" class="px-4 py-2 rounded-lg hidden lg:block  text-white text-base lg:text-lg
                bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700
                shadow-md shadow-indigo-600/20 transition duration-300">
-        Reset Map
-      </button>
+          Reset Map
+        </button>
+      </div>
+
+      <!-- Right Section -->
+      <span class="mr-0 inset absolute right-3 font-semibold font-arial lg:text-3xl text-base whitespace-nowrap">
+        @Manish
+      </span>
+
     </div>
-
-    <!-- Right Section -->
-    <span class="mr-0 inset absolute right-3 font-semibold font-arial lg:text-3xl text-base whitespace-nowrap">
-      @Manish
-    </span>
-
-  </div>
-</nav>
+  </nav>
 
 
   <!-- Map -->
@@ -109,21 +109,91 @@
           const marker = L.marker([pole.latitude, pole.longitude], { icon: redIcon }).addTo(map);
 
           marker.bindTooltip(
-            `<div class="bg-gray-200 px-1">#${pole.pole_no} | ${pole.site}</div>`, 
-            { permanent: true, direction: "right", offset: [1,-27] }
+            `<div class="bg-gray-200 px-1">#${pole.pole_no} | ${pole.site}</div>`,
+            { permanent: true, direction: "right", offset: [1, -27] }
           ).openTooltip();
 
+          // Popup with Copy Button (no inline onclick here)
           marker.bindPopup(`
-            <div class="custom-popup">
-              <strong>Channel No:</strong> ${pole.pole_no}<br>
-              <strong>Site:</strong> ${pole.site}<br>
-              <strong>Name:</strong> ${pole.name}
-            </div>
-          `);
+        <div class="custom-popup">
+          <strong>Channel No:</strong> ${pole.pole_no}<br>
+          <strong>Site:</strong> ${pole.site}<br>
+          <strong>Name:</strong> ${pole.name}<br><br>
+          <button id="copyBtn-${pole.id}"
+            class="mt-2 px-3 py-1 bg-indigo-600 text-white rounded text-sm ">
+            📋 Copy
+          </button>
+        </div>
+      `);
+
+          // Attach click event when popup opens
+          marker.on("popupopen", () => {
+            const btn = document.getElementById(`copyBtn-${pole.id}`);
+            if (btn) {
+              btn.addEventListener("click", () => {
+                copyToClipboard(pole);
+                btn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
+                btn.classList.add("bg-green-600", "hover:bg-green-700");
+
+                // Text bhi change karna chaho to:
+                btn.textContent = "✅ Copied!";
+
+                // 3 sec baad wapas normal kar do
+                setTimeout(() => {
+                  btn.classList.remove("bg-green-600", "hover:bg-green-700");
+                  btn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
+                  btn.textContent = "📋 Copy";
+                }, 3000);
+              });
+            }
+          });
 
           markers.push({ ...pole, marker });
         });
       });
+    // Helper function to format date like 30/04/2025 3:19:16 PM
+    function getCurrentDateTime() {
+      const now = new Date();
+      return now.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      });
+    }
+
+    function copyToClipboard(pole) {
+      const currentTime = getCurrentDateTime();
+
+      const text = `Ticket ID :- NDMC_
+Indus Id :- ${pole.indus_id}
+Location :- ${pole.name}
+Alarm generated time :- ${currentTime}
+Alarm cleared time :-
+RCA:- `;
+
+      navigator.clipboard.writeText(text).then(() => {
+
+        // console.log("Copied ✅", text);
+        // Optional: Toast feedback
+        showToast("Copied to clipboard ✅");
+
+      }).catch(err => {
+        console.error("Failed to copy: ", err);
+      });
+    }
+
+    // Optional toast for user feedback
+    function showToast(msg) {
+      const toast = document.createElement("div");
+      toast.textContent = msg;
+      toast.className = "fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50";
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
 
     // Search function with debounce
     searchBox.addEventListener("input", () => {
@@ -169,9 +239,10 @@
 
     // Reset Map
     function resetMap() {
-      map.setView([28.631562208651633, 77.21960333877945], 17, 
-    { animate: true, duration: 0.6 });
+      map.setView([28.631562208651633, 77.21960333877945], 17,
+        { animate: true, duration: 0.6 });
     }
   </script>
 </body>
+
 </html>
